@@ -1,0 +1,5 @@
+# DreamerOS custom module descriptor
+type: "view"
+name: "dreamernetwork"
+interface: "qtplugin"
+load: "libcalamares_viewmodule_dreamernetwork.so"

@@ -1,0 +1,124 @@
+/* dreameros.qss — the gold-and-navy theme from every mockup this project
+   produced, translated into Qt stylesheet rules. Loaded once in main.cpp. */
+
+QMainWindow, QWidget {
+    background-color: #0a0e14;
+    color: #e6e6da;
+    font-family: "DejaVu Sans";
+    font-size: 14px;
+}
+
+#dreamerPageTitle {
+    color: #d4af37;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+#dreamerSectionHeading {
+    color: #d4af37;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+#dreamerSubtext {
+    color: #aaaaa0;
+    font-size: 12px;
+}
+
+#dreamerFieldLabel {
+    color: #d4af37;
+    font-weight: bold;
+}
+
+#dreamerCard, #dreamerVariantCard, #dreamerDesktopCard, #dreamerPartitionModeCard {
+    background-color: #141a2a;
+    border: 2px solid #96843c;
+    border-radius: 14px;
+    padding: 12px;
+}
+
+#dreamerVariantCard:checked, #dreamerDesktopCard:checked, #dreamerPartitionModeCard:checked {
+    border: 3px solid #d4af37;
+    background-color: #182038;
+}
+
+#dreamerCardTitle {
+    color: #e6e6da;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+#dreamerVariantCard:checked #dreamerCardTitle {
+    color: #d4af37;
+}
+
+#dreamerCardSubtitle {
+    color: #aaaaa0;
+}
+
+QPushButton {
+    background-color: #0c1020;
+    color: #d4af37;
+    border: 2px solid #d4af37;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: bold;
+}
+
+QPushButton:disabled {
+    color: #5a5a5a;
+    border-color: #5a5a5a;
+}
+
+QPushButton:hover:!disabled {
+    background-color: #1a2038;
+}
+
+#dreamerNextButton, #dreamerInstallButton {
+    background-color: #0c1020;
+}
+
+#dreamerToggle {
+    border-radius: 18px;
+    min-width: 60px;
+}
+
+#dreamerToggle:checked {
+    background-color: #d4af37;
+    color: #0a0e14;
+}
+
+#dreamerErrorBanner {
+    background-color: #281010;
+    color: #c85a5a;
+    border: 2px solid #c85a5a;
+    border-radius: 10px;
+    padding: 12px;
+}
+
+#dreamerWarningText {
+    color: #c85a5a;
+}
+
+QListWidget, QLineEdit, QComboBox {
+    background-color: #0a0c18;
+    color: #e6e6da;
+    border: 2px solid #5a5a64;
+    border-radius: 8px;
+    padding: 6px;
+}
+
+QListWidget#dreamerNetworkList::item:selected {
+    background-color: #182038;
+    color: #d4af37;
+}
+
+#dreamerWallpaperPreview {
+    border: 2px solid #96843c;
+    border-radius: 12px;
+}
+
+#dreamerAboutButton {
+    font-size: 12px;
+    padding: 6px 12px;
+}

@@ -1,0 +1,108 @@
+DreamerOS Installer Mockups — Technical Build Notes
+=====================================================
+
+TOOLS USED
+----------
+- Python 3.12 + Pillow (PIL) for all image compositing, shapes, and text
+- matplotlib + geopandas for rendering the real world map (page 2)
+- A public world-country GeoJSON dataset (fetched from raw.githubusercontent.com,
+  repo: johan/world.geo.json) used as the source of country borders
+- Manual alpha-channel masking (numpy) to strip the black background from the
+  uploaded DreamerOS gear/Tux logo and make it a transparent PNG
+- GIF export via Pillow's save_all for the animated "installing" screen
+
+WALLPAPERS
+----------
+- Source: user-provided ZIP of 30 pre-rendered line-pattern PNGs, one per
+  ordered pair of 6 colors (blue, gold, green, purple, red, pink)
+- Renamed to a consistent convention: `color1-color2-wallpaper.png`
+  (lowercase, hyphenated, English color names) so installer code can build
+  the filename directly from two dropdown values without a translation step
+- The actual background used across every installer page is a custom-drawn
+  diagonal-line pattern (dark navy/black base, gold/yellow lines, full-bleed
+  top-to-bottom) generated procedurally with PIL, matching the DreamerOS
+  branding but distinct from the pre-made 30-file wallpaper set
+
+LOGO
+----
+- Original file uploaded by Micha (gold gear with Tux inside, "DreamerOS" text
+  engraved on the rim), on a black background
+- Background removed by treating near-black pixels as transparent (alpha
+  ramp based on RGB sum), producing dreameros_logo.png (RGBA)
+- Displayed at a fixed aspect ratio (never stretched to a square — this was
+  a bug in an earlier draft that made the logo look oval) and pasted top-right
+  on every installer page
+- On the "installing" screen, the logo is pasted onto a square transparent
+  canvas first, then rotated with expand=False. This keeps the canvas size
+  constant every frame, which prevents the "jumping" that occurs when
+  rotating a non-square image with expand=True (bounding box would change
+  size each frame otherwise)
+
+PAGE LAYOUT SYSTEM
+------------------
+Every installer page is built from a small set of reusable helper functions:
+- base_canvas()      — loads the diagonal wallpaper as the page background
+- outer_card()        — draws the single large rounded card that contains
+                         all page content (title, fields, etc.) — added after
+                         user feedback that background lines were bleeding
+                         through UI elements
+- panel()             — smaller filled sub-panels (text fields, list boxes)
+- checkbox()          — reusable checkbox + label, supports a "disabled"
+                         visual state (used for the "login without password"
+                         option, which locks when sudo is enabled)
+- paste_logo()        — places the logo top-right at a fixed height,
+                         preserving aspect ratio
+- next_button()       — the gold-outlined "NEXT" button, bottom-right on
+                         every page except the dedicated INSTALL page
+
+INSTALLING SCREEN (ANIMATED)
+-----------------------------
+Built as a 112-frame GIF:
+- The logo continuously rotates a full 360°, at a deliberately slow rotation
+  speed (small angle increment per frame) per Micha's feedback
+- Log lines ("adding user micha", "installing grub", etc.) enter at the
+  bottom of a fixed-height panel and the whole block scrolls upward as new
+  lines arrive, simulating a live install log — this is NOT a real progress
+  bar (deliberately, per instructions: fake progress bars were rejected)
+- The logo is positioned high enough to slightly overlap the top edge of the
+  log panel, per feedback
+
+WORLD MAP (PAGE 2)
+-------------------
+- Real country borders rendered with matplotlib from GeoJSON polygon data
+  (equirectangular projection, longitude -170 to 180, latitude -58 to 85)
+- Netherlands filled gold as the example "selected" country with a marker
+  dot, all other countries in a muted navy tone consistent with the site
+  palette
+- This replaced an earlier hand-drawn abstract "blob" version that Micha
+  correctly rejected as not resembling a real map
+
+DESKTOP ENVIRONMENT PREVIEWS (PAGE 6 / 6b)
+--------------------------------------------
+- Hand-built mockups (not real screenshots — these would be copyrighted
+  software UI) showing: gradient wallpaper, desktop icons, an open file
+  manager window with a title bar and traffic-light buttons, and a
+  taskbar (KDE-style) or top bar + dock (GNOME-style)
+- The same KDE mockup function is reused for the dark/light mode page,
+  parameterized by a `dark` boolean that swaps the color palette
+
+VARIANT / COMBINATION FILES (in /variants)
+--------------------------------------------
+Per Micha's request, extra copies of certain pages were generated showing
+different selection states, since a static PNG can only show one state at
+a time:
+- page03-variant-choice-{game,develop,scratch}-selected.png
+- page03b-software-{game,develop,scratch}.png (different checkbox sets
+  matching what was agreed per variant)
+- page06-desktop-environment-{kde,gnome}-selected.png
+- page06b-dark-light-mode-{dark,light}-selected.png
+- page04b-add-user-{sudo,nosudo}.png (shows the "login without password"
+  checkbox locked when sudo is on, enabled when sudo is off)
+
+WHAT THIS PACKAGE IS / ISN'T
+-----------------------------
+This is a set of static visual mockups for planning the Calamares installer
+UI and branding — not working Calamares code. The actual `dreamerusers` C++
+viewmodule, .desktop / QML page definitions, and packaging logic for the
+real installer are a separate, ongoing part of the DreamerOS project and are
+not included here.

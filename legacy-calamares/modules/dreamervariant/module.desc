@@ -1,0 +1,4 @@
+type: "view"
+name: "dreamervariant"
+interface: "qtplugin"
+load: "libcalamares_viewmodule_dreamervariant.so"

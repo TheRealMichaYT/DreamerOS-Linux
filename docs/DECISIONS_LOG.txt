@@ -1,0 +1,115 @@
+DreamerOS Installer — Decisions Log
+=====================================
+(chronological summary of the planning conversation with Micha)
+
+GENERAL
+-------
+- Type: Linux distro, Arch-based (not built from scratch, not a non-Linux kernel)
+- Three variants: DreamerOS Game, DreamerOS Develop, DreamerOS Scratch
+- Target users: gamers, developers, and people who want something very
+  lightweight (Scratch = terminal-only base)
+- Installer: Calamares, with the existing custom `dreamerusers` C++
+  viewmodule kept (previous ABI-mismatch bug to be fixed by compiling
+  against the same Calamares version/headers as the live ISO, not by
+  replacing Calamares)
+- Package management: pacman + yay (AUR) + git clone + Flatpak
+- Branding: dark navy/black background, gold/yellow line accents,
+  gold-outlined UI elements with gold text; buttons never filled solid,
+  always outline-style; existing gear + Tux logo used everywhere
+
+DESKTOP ENVIRONMENT
+-------------------
+- KDE Plasma recommended/default, GNOME as the alternative option
+- Game variant: prioritizes performance/frame rate (e.g. linux-zen-style
+  kernel tuning) — but explicitly NO GameMode/MangoHud/CoreCtrl preinstalled,
+  not even as an option
+- Develop variant: prioritizes stability, plus split-screen/tiling app
+  support (native to KDE Plasma)
+- Separate Dark Mode / Light Mode choice, shown with the same live preview
+  style as the DE picker
+
+SOFTWARE / CHECKBOXES PER VARIANT
+------------------------------------
+Game:
+  - Steam, Lutris, Heroic — all as separate checkboxes
+  - Discord — checkbox
+  - VLC — checkbox
+  - OBS Studio — checkbox
+  - Git (git clone) comes automatically, no checkbox
+  - No VS Code, no Docker, no language toolchains, no virtualization tools
+
+Develop:
+  - VS Code — checkbox
+  - Docker — checkbox (widely used enough to include)
+  - Git + language toolchains (Node.js, Python, etc.) — checkbox
+  - VirtualBox / QEMU-KVM (virtualization) — checkbox
+  - Discord, VLC, OBS Studio — also included as checkboxes
+  - No Steam, Lutris, Heroic
+
+Scratch:
+  - Terminal only, no desktop apps
+  - Only pacman, yay, git as package managers
+
+All variants:
+  - Browser choice checkboxes: Brave, Firefox, Chromium (not Chrome), Edge
+    (Edge does have an official Linux build, confirmed during planning)
+
+WALLPAPERS
+----------
+- 30 pre-made line-pattern images (all ordered pairs of 6 colors) uploaded
+  by Micha, renamed to the convention `color1-color2-wallpaper.png` in
+  English, lowercase, hyphenated — so the installer can build the filename
+  directly from two color dropdowns without any translation/mapping step
+- Installer wallpaper picker: two dropdowns (color 1, color 2) that combine
+  into one of the 30 pattern files — no filenames ever shown to the user
+- Chosen default/reference style for the installer itself: dark blue/black
+  background with gold/yellow diagonal lines, touching both the top and
+  bottom edges of the screen
+
+INSTALLER PAGE FLOW (final agreed order)
+-------------------------------------------
+ 1. Installer language — logo top-right (small), language dropdown
+    centered, NEXT bottom-right. This page only appears during
+    installation, never again afterward.
+ 2. Region / timezone (real world map, click or dropdown) + keyboard
+    layout dropdown + system language dropdown (separate from installer
+    language — this sets the installed system's locale)
+ 3. Variant choice — Game / Develop / Scratch (three cards)
+ 3b. Software selection — checkboxes, contents depend on the chosen variant
+ 4. Users & passwords, in four sub-screens:
+    a. Users list (empty state: "No users added" + Add User button)
+    b. Add User form: username, password, confirm password (live
+       match/mismatch check), Sudo rights checkbox, "Login without
+       password" checkbox (auto-disabled the moment Sudo rights is checked)
+    c. Users list (filled state): shows each user with Edit/Delete,
+       Add User button still available — unlimited users can be added
+    d. Root password + confirm — always required as a separate step,
+       regardless of whether any user has sudo rights
+    NEXT on the users-list page is blocked until at least 1 user exists.
+ 5. Hostname — a single text field, nothing else
+ 6. Desktop environment — KDE Plasma / GNOME, each with a live preview
+ 6b. Dark mode / Light mode — same preview style, palette swapped
+ 7. Partitioning — three options:
+    - Erase Disk: fully automatic
+    - Shrink Partition: pick any existing partition and resize it via a
+      drag handle, freed space becomes available for the new install
+    - Manual: user assigns mountpoints themselves; NEXT is blocked until
+      both /boot and / have been assigned
+ 8. Summary — read-only recap of every choice made so far
+ 9. INSTALL button — large, centered, gold-outlined, no other content
+10. Installing screen — no fake progress bar (explicitly rejected).
+    Instead: the DreamerOS logo spins continuously (slow, constant 360°
+    rotation, positioned high enough to slightly overlap the log panel)
+    above a live-updating log feed (e.g. "adding user micha", "installing
+    grub") that scrolls upward as new lines arrive, like a terminal
+11. Finished screen — "Installation Complete" + Restart Now button
+
+UI STYLE RULES THAT APPLY TO EVERY PAGE
+-------------------------------------------
+- One large card contains ALL page content (title, fields, everything)
+  except the NEXT button, which floats independently bottom-right —
+  this was a correction after an early draft let the background lines
+  bleed through text and panels
+- Logo: top-right, correct aspect ratio (must stay round/undistorted,
+  never stretched into an oval), consistent size across every page
+- NEXT button: gold outline, gold text, transparent/dark fill, bottom-right

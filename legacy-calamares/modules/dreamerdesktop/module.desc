@@ -1,0 +1,4 @@
+type: "view"
+name: "dreamerdesktop"
+interface: "qtplugin"
+load: "libcalamares_viewmodule_dreamerdesktop.so"

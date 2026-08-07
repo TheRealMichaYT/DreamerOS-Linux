@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>dreameros.qss</file>
+        <file>dreameros-logo.png</file>
+        <file>world-map.png</file>
+    </qresource>
+</RCC>

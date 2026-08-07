@@ -1,0 +1,192 @@
+DREAMEROS — SESSION NOTES (Claude chat, follow-up to the original installer package)
+======================================================================================
+This file exists because images can't be added to Project files directly. Everything
+that happened in this chat — feedback, new pages, the splash screen, and the Scratch
+variant spec — is written out here so it can be dropped into the project alongside the
+original DreamerOS-Installer-Package.zip.
+
+
+1. REVIEW OF THE ORIGINAL PACKAGE
+----------------------------------
+Good:
+- Consistent system: reusable functions for card/panel/checkbox/button, so every page
+  looks like it belongs to the same design
+- Wallpaper filenames are self-describing (colorA-colorB-wallpaper.png), so the
+  installer can build the filename itself with no translation step
+- Real logic already baked in: NEXT is blocked until a user exists, "login without
+  password" is locked when sudo is on
+- No fake progress bar — a real live log list instead, feels more honest
+- Real world map instead of a drawn shape
+- Known bugs (oval logo) already fixed before this session started
+
+Weak points at the time:
+- Only mockups — no working installer code yet (dreamerusers viewmodule doesn't exist)
+- ABI-mismatch bug not resolved
+- No visible error states anywhere
+- Only one wallpaper style (diagonal lines) actually used in the installer itself
+- Game variant has no GameMode/MangoHud
+
+
+2. NEW INSTALLER PAGES ADDED THIS SESSION
+-------------------------------------------
+
+2.1 Page06c — "Custom Wallpaper?" (yes/no)
+Sits right after Dark/Light mode (page06b). Two big selectable cards, same visual
+language as the page03 variant-choice cards (rounded rect, gold outline when
+"selected", grey outline when not). YES -> goes to page06d. NO -> skips straight to
+page07 (partitioning).
+
+2.2 Page06d — Color 1 / Color 2 picker
+Two dropdowns (Color 1 = main, Color 2 = details) on the left, live wallpaper preview
+on the right using the actual wallpaper asset for whatever combination is selected.
+Rule: Color 2 can't equal Color 1 (that file doesn't exist in the 30-wallpaper set,
+since every wallpaper is two different colors) — Color 1's choice is excluded from
+Color 2's dropdown list.
+Bug found + fixed: the subtitle text and the "Color 1 (main)" label were overlapping
+because they were placed too close together. Fixed by moving the whole color-picker
+block down and giving the subtitle its own clear line.
+
+2.3 Page01b — "Connect to a Network" (new, sits between page01 language and page02
+region/timezone)
+Left: list of nearby Wi-Fi networks (signal-strength bars + lock icon for secured
+ones), selecting one reveals a password field. Right: a bigger "I use Ethernet" card
+with a checkbox — checking it skips Wi-Fi setup entirely.
+Error variant: if neither a Wi-Fi network is connected nor Ethernet is selected, a red
+"No network connection detected" banner appears and NEXT is greyed out/blocked.
+Bugs found + fixed:
+  - Password field text was sitting on top of the last Wi-Fi row (Cafe_Open) instead
+    of below the whole list — moved it below the list box with its own label.
+  - Ethernet card was too small and the checkbox was cramped next to the label —
+    made the card taller and moved the checkbox to its own row underneath.
+
+2.4 Page02 — NTP toggle added
+Added a new row at the bottom of the existing Region/Timezone/Keyboard page:
+"Automatic time (NTP)" with a short description and an ON/OFF pill toggle (default
+ON). The card itself was made taller to fit this without touching the map or the
+existing dropdowns — the original map + dropdown content was reused unchanged, just
+given more room underneath it.
+
+
+3. HOW THE NEW PAGES WERE ACTUALLY BUILT (methodology, for anyone continuing this)
+--------------------------------------------------------------------------------------
+- Built with Python + Pillow (PIL), same approach as the original package.
+- Background: the diagonal-lines-blue-gold-wallpaper.png asset, reused as-is on every
+  new page for visual consistency.
+- Outer card: a rounded rectangle drawn with alpha compositing (semi-transparent navy
+  fill, 3px gold outline, ~28px corner radius).
+- Logo (top-right on every page): this caused real trouble. There's no standalone
+  logo file in the package — it only exists baked into each page image, sitting on
+  top of the busy diagonal-line background. A first attempt just hard-pasted a
+  rectangular crop of the logo area from an existing page onto the new pages — this
+  produced a visible rectangular seam/glitch cutting into the card's gold border,
+  because the crop included background pixels, not just the round logo.
+  Fix: extract the logo with real transparency instead of a hard rectangle.
+    1st attempt — simple color-difference threshold against a sampled background
+    pixel: failed, because the thin diagonal gold lines in the background are close
+    enough in color to the logo's gold that they got picked up too.
+    2nd attempt — flood-fill from the crop edges to mark connected background
+    regions as transparent: also failed, thin lines touching the crop border in
+    multiple places confused the connected-component detection.
+    Working approach — morphological "opening" (binary erosion followed by dilation,
+    via scipy.ndimage): thin lines (a couple of px wide) get erased by the erosion
+    step and never come back, while the solid logo shapes survive because they're
+    wide enough. Then binary_fill_holes to patch any small gaps, then keep only the
+    single largest connected blob (the badge itself). This produced a clean
+    transparent PNG of the actual DreamerOS gear+Tux logo, pasted with a real alpha
+    mask instead of a hard rectangle from then on. Note: the gear "teeth" lost some
+    fine detail in this process since they're similarly thin to the background
+    lines — if a clean standalone logo file ever gets uploaded separately, it should
+    be re-extracted from that instead, it'll look sharper.
+  Logo is pasted top-right, transparent background, on every new page.
+- NEXT button: same treatment as the logo initially (cropped from an existing page),
+  later pages draw it fresh (rounded rect + gold text) once position needed to move
+  around (e.g. the blocked/greyed-out state on the network error page).
+- Fonts: DejaVu Sans Bold / DejaVu Sans (system fonts, no custom font file used).
+
+
+4. SPLASH SCREEN (boot animation)
+------------------------------------
+Requirement: NOT a video — 150 separate PNG frames instead, so it can be played back
+frame-by-frame during boot.
+
+Storyboard (as specified):
+  - Frame 1: logo upside down (180°)
+  - Frames 1 -> ~30: rotates counter-clockwise back to upright
+  - Frames ~30 -> ~90: rotates clockwise a full extra loop, ends upright again
+  - Frames ~90 -> 150: keeps rotating while sliding from center to the left, and the
+    gold "DreamerOS" wordmark fades in next to it
+
+(Original ask was for the two turning points to land exactly on frame 50 and frame
+100, with 180°+360°+360° of rotation respectively. That combination is
+mathematically impossible to do at a constant rotation speed — 180° in 50 frames is
+half the angular speed of 360° in 50 frames, which is exactly the "speeds up"
+jump that got flagged. Fixed by keeping the total rotation the same (900° over the
+full 150 frames) but spreading it out evenly, which moves the turning points to
+roughly frame 31 and frame 90 instead of 50/100. Visually smooth, no sudden jump.)
+
+Logo asset used for the animation: same extraction problem as above (no standalone
+logo file), solved the same way — morphological opening to strip the background
+lines, cropped to a tight square so it rotates cleanly around its own center without
+wobbling or jumping (rotation done with Pillow's .rotate(angle, expand=False) so the
+canvas size never changes between frames, which avoids the "jumping" bug the
+original BUILD_NOTES.txt already warned about for the installing-screen spinner).
+
+Output: 150 individual PNG frames (frame_001.png … frame_150.png), plus a compiled
+GIF for quick preview purposes only — the real deliverable for the OS itself is the
+150 loose frames, not the GIF.
+
+
+5. SCRATCH VARIANT — LIGHTWEIGHT SPEC
+-----------------------------------------
+Goal: keep the "Scratch" install option as small as realistically possible while
+still being usable, terminal + browser only.
+
+Confirmed decisions:
+- Desktop: KDE Plasma is kept (not swapped for something else), but stripped of the
+  usual bundled apps that normally ship alongside it (no Kate, no extra Dolphin
+  add-ons, no games, no bundled office/media apps, etc.)
+- Apps: only a terminal and a browser ship by default. Nothing else.
+- Kernels: only the newest kernel is kept; old kernels get removed instead of
+  piling up after updates.
+- Languages: only the language(s) actually used are kept; all other locale/
+  translation packages are stripped.
+- Firmware: only firmware needed for the hardware actually being targeted is kept;
+  everything else is dropped.
+- Package manager: pacman only, nothing else installed alongside it.
+- Man-pages: removed entirely (no offline `man` documentation).
+- Wallpaper: one single, fixed, pure black wallpaper. No wallpaper picker, no
+  Color1/Color2 flow (that feature — page06c/06d above — is Game/Develop only, not
+  Scratch). Only a light/dark UI mode toggle remains.
+- Splash: removed entirely for Scratch. Reasoning: it saves a little boot time and a
+  few MB of frames, but more importantly Scratch is terminal-only with no display
+  server running at boot, so a graphical spinner animation can't actually be shown
+  the way it's designed for Game/Develop anyway. Scratch boots straight to
+  console/login instead.
+
+Rough impact ranking of what was stripped (biggest space savings first):
+  1. Full desktop/GUI stack + bundled apps — by far the largest saving (GB range)
+     if it were removed entirely; for Scratch specifically, KDE itself stays but
+     loses its bundled-app weight
+  2. Old kernels piling up after updates — hundreds of MB per kernel
+  3. Language/locale packages beyond what's actually used — can be hundreds of MB
+  4. Firmware for hardware that isn't being targeted — hundreds of individual files
+  5. Package manager cache left behind after install — hundreds of MB if not cleared
+  6. Man-pages / documentation — up to a couple hundred MB if kept in full
+  7. Icon/cursor themes, extra fonts — tens of MB
+  8. Splash frames — only a few MB, smallest item on this list, but removed anyway
+     since Scratch has no display server to show it on
+
+
+6. OPEN / NOT DECIDED YET
+-----------------------------
+- Bootloader: intentionally not discussed — always GRUB, no OpenCore option, not up
+  for debate.
+- "Update while installing" checkbox: explicitly rejected — the installer already
+  always pulls the newest ISO, so a separate "download updates during install" step
+  isn't needed.
+- Not yet designed: LUKS disk encryption page, swap settings page, third-party
+  driver (e.g. Nvidia) page, a pre-install system check page (disk space / power /
+  internet). All were discussed as "things other installers commonly have" but the
+  user chose not to add any of them this session.
+- No working installer code exists yet anywhere in this project — everything above
+  (including the original package) is still mockup/design stage only.
